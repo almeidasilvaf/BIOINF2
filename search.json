@@ -24,7 +24,7 @@
     "href": "chapters/phylogenomics.html",
     "title": "1  Phylogenomics",
     "section": "",
-    "text": "1.1 Goals of this lesson\nIn this lesson, you will learn to:\nWe will start by loading the required packages.\nlibrary(here)\nlibrary(cogeqc)\nlibrary(Biostrings)\nlibrary(tidyverse)\nlibrary(ape)\nlibrary(msa)\n\nset.seed(123) # for reproducibility\noptions(timeout = 1e8)\n\nsource(here(\"code\", \"utils.R\")) # helper functions",
+    "text": "1.1 Goals of this lesson\nPhylogenomics aims at reconstructing the evolutionary histories of organisms taking into account whole genomes or large fractions of genomes. In this lesson, you will learn how to infer a species tree from whole-genome sequence data using a standard phylogenomics pipeline.\nIn this lesson, you will learn to:\nWe will start by loading the required packages.\nlibrary(here)\nlibrary(cogeqc)\nlibrary(Biostrings)\nlibrary(tidyverse)\nlibrary(ape)\nlibrary(msa)\n\nset.seed(123) # for reproducibility\noptions(timeout = 1e8)\n\nsource(here(\"code\", \"utils.R\")) # helper functions",
     "crumbs": [
       "<span class='chapter-number'>1</span>  <span class='chapter-title'>Phylogenomics</span>"
     ]
