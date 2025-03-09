@@ -1,0 +1,15 @@
+{
+  "hash": "ef75ff85fecd56d204bcb1c703a781d1",
+  "result": {
+    "engine": "knitr",
+    "markdown": "\n# Preface {.unnumbered}\n\nThis book aims to provide learners with a hands-on introduction to\ntopics in Bioinformatics, and the materials here are used in the practical \nlessons of the course **C000500A - Bioinformatics 2** at Ghent University.\n\nEach book chapter represents the contents of a practical lesson from \nthe UGent courses, and they serve both as a guide during the lessons and \nas a reference to go back later.\n\nThe book will cover:\n\n1. Phylogenomics\n2. Gene set enrichment\n\n## Setup\n\nTo run the code in this book, you will need to install:\n\n1.  R (\\>=4.2.0): go to the [CRAN website](https://cran.r-project.org/), choose your OS (Windows, Linux, or macOS), and follow the installation instructions.\n\n2.  RStudio Desktop: go to the [RStudio website](https://posit.co/download/rstudio-desktop/) and download the installer for your OS.\n\n3.  IQ-TREE 2: go to the [IQ-TREE download page](http://www.iqtree.org/#download) and follow the installation instructions for your OS.\n\nAfter installing R and RStudio, you will need to install some required R \npackages. To do that, open RStudio and execute the code below in your console:\n\n\n::: {.cell}\n\n```{.r .cell-code}\n# Install BiocManager\ninstall.packages(\"BiocManager\")\n\n# Use BiocManager to install required packages\nlibrary(here)\nlibrary(cogeqc)\nlibrary(Biostrings)\nlibrary(tidyverse)\nlibrary(ape)\nlibrary(msa)\n\npackages <- c(\n    \"treeio\", \n    \"ape\",\n    \"ggtree\", \n    \"here\", \n    \"Biostrings\",\n    \"msa\", \n    \"tidyverse\"\n)\n\nBiocManager::install(packages)\n```\n:::\n\n\nAfter that, you should have everything ready.\n",
+    "supporting": [],
+    "filters": [
+      "rmarkdown/pagebreak.lua"
+    ],
+    "includes": {},
+    "engineDependencies": {},
+    "preserve": {},
+    "postProcess": true
+  }
+}
