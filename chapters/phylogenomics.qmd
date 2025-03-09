@@ -1,0 +1,452 @@
+
+# Phylogenomics
+
+Phylogenomics aims at reconstructing the evolutionary histories of organisms
+taking into account whole genomes or large fractions of genomes. In this 
+lesson, you will learn how to infer a species tree from whole-genome
+sequence data using a standard phylogenomics pipeline.
+
+## Goals of this lesson
+
+In this lesson, you will learn to:
+
+- identify single-copy orthologs, typical markers for phylogenomic
+studies;
+- perform multiple sequence alignments;
+- infer phylogenetic trees using concatenation-based [@minh2020iq]
+and coalescent-based [@zhang2017astral] approaches;
+- read, explore, and visualize phylogenetic trees in R.
+
+We will start by loading the required packages.
+
+```{r}
+#| message: false
+
+library(here)
+library(cogeqc)
+library(Biostrings)
+library(tidyverse)
+library(ape)
+library(msa)
+
+set.seed(123) # for reproducibility
+options(timeout = 1e8)
+
+source(here("code", "utils.R")) # helper functions
+```
+
+```{r}
+#| eval: false
+#| echo: false
+
+# Create Conda environments for dependencies
+miniconda_path <- tempdir()
+
+## BUSCO
+busco_env <- Herper::install_CondaTools(
+    tools = "busco==5.5.0",
+    env = "busco_env",
+    pathToMiniConda = miniconda_path
+)
+```
+
+## Data acquisition
+
+In this lesson, we will use data from Ensembl [@harrison2024ensembl],
+a database with genomic data for vertebrate species. However, since using
+all species on Ensembl would lead to much longer runtimes, we will only use
+species that are present on *Ensembl Pan Compara*, a cross-species comparative
+resource on Ensembl. We will start by retrieving species metadata.
+
+```{r}
+#| warning: false
+
+# Get metadata for species on Pan Compara
+metadata <- read_tsv(
+    "https://ftp.ensembl.org/pub/release-113/species_EnsemblVertebrates.txt",
+    show_col_types = FALSE, col_select = 1:15
+) |> 
+    filter(pan_compara == "Y") |>
+    dplyr::select(1:6)
+
+metadata
+```
+
+Then, we will obtain whole-genome protein sequences (only one for each
+gene) for each species. To do that, we will define a helper
+function to:
+
+1. Read FASTA files directly from Ensembl's FTP repository as `AAStringSet`
+objects.
+2. Filter the `AAStringSet` objects to keep only translated sequences of
+longest transcripts (i.e., one gene -> one protein).
+
+```{r}
+#| eval: false
+
+# Define helper function to read proteomes from Ensembl
+get_proteomes <- function(species) {
+    
+    # Get URL to FTP directory
+    surl <- file.path(
+        "https://ftp.ensembl.org/pub/release-113/fasta", 
+        species, "pep/"
+    )
+    
+    # Get protein sequences of longest transcripts for each gene
+    seqs <- lapply(surl, function(x) {
+        
+        ## Get links to FASTA files
+        fname <- XML::getHTMLLinks(RCurl::getURL(x, dirlistonly = TRUE))
+        fname <- fname[grep("\\.fa\\.gz$", fname)]
+        fname <- fname[!grepl("abinitio", fname)]
+        seq_path <- paste0(x, fname)
+        
+        ## Read sequences as an `AAStringSet` object
+        seq <- Biostrings::readAAStringSet(seq_path)
+        names(seq) <- gsub(" .*", "", gsub(".*gene:", "", names(seq)))
+        
+        ## Keep only translated sequence of longest transcript
+        seq <- seq[order(Biostrings::width(seq), decreasing = TRUE)]
+        seq <- seq[!duplicated(names(seq))]
+        
+        return(seq)
+    })
+    names(seqs) <- gsub("_", "\\.", species)
+    
+    return(seqs)
+}
+```
+
+Now, we will *actually* get the proteomes by executing the function
+we've just defined.
+
+```{r}
+#| eval: false
+
+# Get proteomes for all species
+proteomes <- get_proteomes(metadata$species)
+```
+
+## Obtaining BUSCO genes
+
+Now that we have whole-genome protein sequences for each species,
+we can run BUSCO to identify single-copy gene families in our proteomes.
+To do that, BUSCO relies on comparing our sequences with pre-built 
+profile Hidden Markov Models (HMMs) for a particular clade. These profiles
+HMMs are available for a bunch of different clades (referred to as
+'lineage data sets'), and selecting the right lineage data set is critical to
+correctly identify single-copy gene families. To view a list of
+all lineage data sets available in BUSCO, you can run the following
+code:
+
+```{r}
+#| eval: false
+
+# List lineage datasets
+cogeqc::list_busco_datasets()
+```
+
+As you can see, the lineage data sets in BUSCO have a hierarchical (i.e., tree-like) 
+structure. For example, the lineage *vertebrata_odb10* contains two lineages, 
+*actinopterygii_odb10* and *tetrapoda_odb10*. The lineage *tetrapoda_odb10*,
+in turn, contains the lineages *mammalia_odb10* and *sauropsida_odb10*.
+The best lineage data set is usually thought to be the one that includes all
+species in your data set in the most taxonomically restricted way. 
+This is because the number of BUSCO genes decreases as we go from a broader
+clade (e.g. Vertebrata) to a stricter clade (e.g. Mammalia). For instance,
+if your data set contains only mammals, you could use lineages *metazoa_odb10*,
+*vertebrata_odb10*, *tetrapoda_odb10*, or *mammalia_odb10*. Let's see
+the number of BUSCO genes for each of these clades.
+
+```{r}
+#| fig-width: 7
+#| fig-height: 4
+
+# Plot number of BUSCO genes for clades from metazoa to mammalia
+clades <- "metazoa|vertebrata|tetrapoda|mammalia"
+
+p_lineages <- rvest::read_html("https://busco.ezlab.org/list_of_lineages.html") |>
+    rvest::html_table() |>
+    purrr::pluck(1) |>
+    dplyr::rename(lineage = 1, ngenes = 2) |>
+    filter(str_detect(lineage, clades)) |>
+    arrange(-ngenes) |>
+    mutate(lineage = as_factor(lineage)) |>
+    ggplot(aes(x = ngenes, y = lineage)) +
+    geom_bar(stat = "identity", fill = "deepskyblue4", color = "black") +
+    geom_text(aes(label = ngenes), hjust = -0.2) +
+    scale_x_continuous(limits = c(0, 1.2e4), expand = c(0.01, 0.01)) +
+    theme_classic() +
+    labs(
+        title = "Number of BUSCO genes for each lineage",
+        x = "Number of genes", y = "Lineage"
+    )
+
+p_lineages
+```
+
+The plot shows that more restrict clades have more BUSCO genes. Thus, if you
+want to infer a phylogeny for some mammals, you should choose *mammalia_odb10*
+as your lineage data set, not broader clades that include other things
+beside mammals (e.g. *vertebrata_odb10* or *metazoa_odb10*).
+
+The example data set in this lesson contains a diverse set of animals, 
+most of which are vertebrates, but also with the tunicate *Ciona savignyi* 
+(outgroup). Given this data set (vertebrates + a tunicate), the best lineage
+data set is *metazoa_odb10*. 
+
+To identify what BUSCO genes can be found in our data set, we can use
+the function `run_busco` from the R package `r BiocStyle::Biocpkg("cogeqc")`
+to run BUSCO in protein mode using *metazoa_odb10* as lineage data set. 
+However, because running BUSCO takes several minutes, we will load
+a pre-computed set of BUSCO genes identified in this data set.
+
+```{r}
+# Load pre-computed BUSCO genes
+busco_genes <- readRDS(here("output", "busco_seqs.rds"))
+```
+
+The file `busco_seqs.rds` was created with the code below, which does the
+following:
+
+1. Run BUSCO in `protein` mode using *metazoa_odb10* as lineage data set.
+2. Identify BUSCO genes that are shared by all species (i.e., species coverage
+of 100%);
+3. Read sequences of conserved BUSCO genes as a list of `AAStringSet` objects,
+each containing 12 sequences (the BUSCO gene *i* in all 12 species).
+
+```{r}
+#| eval: false
+#| code-fold: true
+#| code-summary: "Show me the code"
+
+# Export sequences to a directory
+seq_dir <- file.path(tempdir(), "seqs")
+dir.create(seq_dir)
+
+e <- lapply(seq_along(proteomes), function(x) {
+    fn <- file.path(seq_dir, paste0(names(proteomes)[x], ".fasta"))
+    writeXStringSet(proteomes[[x]], filepath = fn)
+})
+
+# Run BUSCO in `protein` mode
+busco_output <- file.path(tempdir(), "busco") # path to BUSCO output
+data_output <- file.path(tempdir(), "datasets") # path to BUSCO datasets
+
+cogeqc::run_busco(
+    sequence = seq_dir,
+    outlabel = "ensembl",
+    mode = "proteins",
+    lineage = "metazoa_odb10",
+    outpath = busco_output,
+    download_path = data_output,
+    threads = 4
+)
+
+# Read sequences of BUSCO genes
+busco_seqdir <- file.path(busco_output, "ensembl")
+busco_seqs <- read_busco_sequences(busco_seqdir)
+
+# Save object to file
+saveRDS(busco_seqs, compress = "xz", file = here("output", "busco_seqs.rds"))
+```
+
+This is what the object looks like:
+
+```{r}
+# Take a look at the first 3 BUSCO genes
+head(busco_genes, 3)
+
+# Check number of genes
+length(busco_genes)
+```
+
+As you can see, we found 282 BUSCO genes shared by all 12 species in our data
+set. These 282 genes represent our marker gene set for phylogeny inference.
+
+## Multiple sequence alignment
+
+Once we have our marker genes, we can perform a multiple sequence 
+alignment (MSA) and use the MSA to infer a phylogeny.
+
+```{r}
+# Perform MSA for each BUSCO gene with MUSCLE
+msas <- lapply(busco_genes, msa, method = "Muscle")
+
+# Convert MSAs to `AAStringSet` class
+msas_aa <- lapply(msas, as, "AAStringSet")
+```
+
+Let's take a look at the first few MSAs to see what they look like.
+
+```{r}
+# Take a look at the MSAs for the first 3 genes
+head(msas_aa, 3)
+```
+
+[You can also use the function `msaPrettyPrint()` from the `r BiocStyle::Biocpkg("ggmsa")` package to visualize the MSA. This function will create a PDF in your working environment with a publication-ready figure (often with multiple pages, as MSAs are typically long) displaying your MSA]{.aside}
+
+I guess you can see that some alignments have columns with a lot of gaps.
+Since these are usually not much informative for phylogeny inference, it is
+common practice to remove MSA columns with too many gaps. This process is
+called 'trimming'. Here, we will the helper function `trim_alignment()` 
+(source code in file *utils.R*) to remove alignment columns with >50% of gaps.
+
+```{r}
+# Trim MSAs with remove columns with >50% of gaps
+trimmed_msas <- lapply(msas_aa, trim_alignment, max_gap = 0.5)
+
+# Take a look at trimmed MSAs
+head(trimmed_msas, 3)
+```
+
+Now that we have trimmed MSAs, we can use them to infer a phylogeny.
+
+## Phylogeny inference: concatenation-based approaches
+
+The simplest way of inferring a phylogeny from phylogenomic (i.e. multi-gene)
+data sets is to concatenate MSAs for each gene into a single MSA, and then
+infer a phylogeny as you'd do for a single MSA. This concatenated MSA is often
+referred to as a 'supermatrix', which is why this approach is usually
+called 'supermatrix-based', or 'concatenation-based'.
+
+To demonstrate how this works, we will concatenate MSAs and infer a species
+tree using IQ-TREE 2 [@minh2020iq]. For that, we will use a helper function
+`infer_species_tree()` (source code in *utils.R*), which runs IQ-TREE 2 from
+the R session and reads the inferred tree as an object of 
+class `phylo` (standard class to represent trees in R, from the 
+`r BiocStyle::CRANpkg("ape")` package).
+
+```{r}
+#| eval: false
+
+# Concatenate alignments
+conc_msa <- Reduce(xscat, trimmed_msas)
+names(conc_msa) <- names(trimmed_msas[[1]])
+
+# Take a look at the concatenated alignment
+head(conc_msa)
+
+# Infer species tree from concatenated alignment
+outgroup <- "ciona.savignyi"
+tree_conc <- infer_species_tree(
+    list(conc = conc_msa),
+    outgroup, 
+    threads = 4
+)
+```
+
+The tree inferred from the concatenated alignment is stored in 
+`output/trees/supermatrix.treefile`, and the output file with a detailed 
+summary (models and AICs/BICs, base frequencies, etc) is stored in 
+`output/trees/supermatrix.iqtree`. To load a phylogenetic tree from a file,
+you can use the function `read.tree()` from the R package `r BiocStyle::CRANpkg("ape")`.
+
+```{r}
+# Read tree as a `phylo` object
+tree_conc <- read.tree(here("output", "trees", "supermatrix.treefile"))
+
+# Plot tree
+plot(tree_conc)
+```
+
+
+## Phylogeny inference: coalescent-based approaches
+
+Here, instead of inferring a single tree from concatenated MSAs, we will
+infer an individual tree for each BUSCO gene. We will then use these set of 
+trees to calculate concordance factors and use coalescent-based approaches.
+
+```{r}
+#| eval: false
+
+# Infer single-locus trees
+outgroup <- "ciona.savignyi"
+tree_sl <- infer_singlelocus_trees(
+    trimmed_msas,
+    outgroup,
+    outdir = here("output", "sl_trees"),
+    threads = 4
+)
+```
+
+Now, we will read the output tree file. Since this is not one, but many trees,
+trees will be stored in an object of class `multiPhylo`. In essence,
+a `multiPhylo` object is a list of multiple `phylo` objects.
+
+```{r}
+# Read tree
+tree_sl <- read.tree(here("output", "sl_trees", "sl.treefile"))
+
+tree_sl
+```
+
+Next, we will infer a species tree from this set of gene trees using
+ASTRAL [@zhang2017astral], a Java program that can be run on the 
+command line using the following code:
+
+```{bash}
+#| eval: false
+java -jar astral.5.7.8.jar -i sl.treefile -o astral.tree
+```
+
+Then, we can read the species tree created by ASTRAL. Note that ASTRAL
+is a coalescent-based method that uses parsimony principles to infer
+**a single species tree** from **a set of (many) gene trees**.
+
+```{r}
+# Read species tree created with ASTRAL
+astral_tree <- read.tree(here("output", "sl_trees", "astral.tree"))
+
+# Plot tree
+plot(astral_tree)
+```
+
+Finally, once we have a representative species tree (generated by ASTRAL)
+and multiple gene trees (generated by IQ-TREE 2), we can calculate so-called 
+*gene concordance factors (gCF)*, which represent the proportion of
+decisive gene trees that support each branch of the species tree. These can
+be computed with the code below
+
+```{r}
+#| eval: false
+
+# Calculate gCF with IQ-TREE 2
+args <- c(
+    "-t", here("output", "sl_trees", "astral.tree"),
+    "--gcf", here("output", "sl_trees", "sl.treefile"),
+    "--prefix", here("output", "sl_trees", "gcf")
+)
+
+system2("iqtree2", args)
+```
+
+Then, we can read the tree and explore the tree with gCF for each branch
+with:
+
+```{r}
+#| fig-height: 6
+
+# Read tree with gCF
+gcf_tree <- read.tree(here("output", "sl_trees", "gcf.cf.tree"))
+
+plot(gcf_tree, show.node.label = TRUE)
+```
+
+## Session information {.unnumbered}
+
+This document was created under the following conditions:
+
+```{r}
+sessionInfo()
+```
+
+## References {.unnumbered}
+
+
+
+
+
+
+

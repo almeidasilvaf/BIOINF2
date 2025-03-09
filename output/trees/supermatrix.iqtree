@@ -1,0 +1,233 @@
+IQ-TREE 2.0.7 built Jan 21 2022
+
+Input file name: /tmp/RtmpnLzFH6/file268d1e236bda03.fa
+Type of analysis: ModelFinder + tree reconstruction + ultrafast bootstrap (1000 replicates)
+Random seed number: 15109
+
+REFERENCES
+----------
+
+To cite IQ-TREE please use:
+
+Bui Quang Minh, Heiko A. Schmidt, Olga Chernomor, Dominik Schrempf,
+Michael D. Woodhams, Arndt von Haeseler, and Robert Lanfear (2020)
+IQ-TREE 2: New models and efficient methods for phylogenetic inference
+in the genomic era. Mol. Biol. Evol., in press.
+https://doi.org/10.1093/molbev/msaa015
+
+To cite ModelFinder please use: 
+
+Subha Kalyaanamoorthy, Bui Quang Minh, Thomas KF Wong, Arndt von Haeseler,
+and Lars S Jermiin (2017) ModelFinder: Fast model selection for
+accurate phylogenetic estimates. Nature Methods, 14:587–589.
+https://doi.org/10.1038/nmeth.4285
+
+Since you used ultrafast bootstrap (UFBoot) please also cite: 
+
+Diep Thi Hoang, Olga Chernomor, Arndt von Haeseler, Bui Quang Minh,
+and Le Sy Vinh (2018) UFBoot2: Improving the ultrafast bootstrap
+approximation. Mol. Biol. Evol., 35:518–522.
+https://doi.org/10.1093/molbev/msx281
+
+SEQUENCE ALIGNMENT
+------------------
+
+Input data: 12 sequences with 140588 amino-acid sites
+Number of constant sites: 52460 (= 37.3147% of all sites)
+Number of invariant (constant or ambiguous constant) sites: 52460 (= 37.3147% of all sites)
+Number of parsimony informative sites: 40324
+Number of distinct site patterns: 56565
+
+ModelFinder
+-----------
+
+Best-fit model according to BIC: JTT+F+R4
+
+List of models sorted by BIC scores: 
+
+Model                  LogL         AIC      w-AIC        AICc     w-AICc         BIC      w-BIC
+JTT+F+R4        -1523693.746 3047479.492 +        1 3047479.523 +        1 3047932.757 +        1
+JTTDCMut+F+R4   -1523892.827 3047877.654 - 3.47e-87 3047877.685 - 3.47e-87 3048330.919 - 3.47e-87
+JTT+R4          -1525350.029 3050754.058 -        0 3050754.069 -        0 3051020.105 -        0
+JTTDCMut+R4     -1525513.165 3051080.330 -        0 3051080.341 -        0 3051346.377 -        0
+LG+F+R4         -1528197.532 3056487.064 -        0 3056487.095 -        0 3056940.329 -        0
+LG+R4           -1530411.116 3060876.232 -        0 3060876.243 -        0 3061142.279 -        0
+LG+R5           -1530410.558 3060879.116 -        0 3060879.128 -        0 3061164.870 -        0
+LG+R3           -1530640.401 3061330.802 -        0 3061330.811 -        0 3061577.142 -        0
+WAG+F+R4        -1531996.744 3064085.488 -        0 3064085.519 -        0 3064538.753 -        0
+LG+G4           -1532286.588 3064617.176 -        0 3064617.183 -        0 3064833.955 -        0
+LG+I+G4         -1532290.234 3064626.468 -        0 3064626.476 -        0 3064853.101 -        0
+VT+F+R4         -1532780.863 3065653.726 -        0 3065653.757 -        0 3066106.991 -        0
+WAG+R4          -1533207.847 3066469.694 -        0 3066469.705 -        0 3066735.741 -        0
+VT+R4           -1533508.399 3067070.798 -        0 3067070.809 -        0 3067336.845 -        0
+LG+R2           -1534635.007 3069316.014 -        0 3069316.022 -        0 3069542.647 -        0
+mtInv+F+R4      -1535169.982 3070431.964 -        0 3070431.995 -        0 3070885.229 -        0
+Dayhoff+F+R4    -1535250.094 3070592.188 -        0 3070592.219 -        0 3071045.453 -        0
+rtREV+F+R4      -1535290.452 3070672.904 -        0 3070672.935 -        0 3071126.169 -        0
+DCMut+F+R4      -1535314.259 3070720.518 -        0 3070720.549 -        0 3071173.783 -        0
+cpREV+F+R4      -1538483.570 3077059.140 -        0 3077059.171 -        0 3077512.405 -        0
+mtMet+F+R4      -1539433.609 3078959.218 -        0 3078959.249 -        0 3079412.483 -        0
+Dayhoff+R4      -1540989.041 3082032.082 -        0 3082032.093 -        0 3082298.129 -        0
+DCMut+R4        -1541073.272 3082200.544 -        0 3082200.555 -        0 3082466.591 -        0
+cpREV+R4        -1543679.248 3087412.496 -        0 3087412.507 -        0 3087678.543 -        0
+mtZOA+F+R4      -1543759.537 3087611.074 -        0 3087611.105 -        0 3088064.339 -        0
+FLU+F+R4        -1544220.345 3088532.690 -        0 3088532.721 -        0 3088985.955 -        0
+HIVb+F+R4       -1545029.952 3090151.904 -        0 3090151.935 -        0 3090605.169 -        0
+rtREV+R4        -1545434.688 3090923.376 -        0 3090923.387 -        0 3091189.423 -        0
+PMB+F+R4        -1545949.321 3091990.642 -        0 3091990.673 -        0 3092443.907 -        0
+Blosum62+F+R4   -1546576.082 3093244.164 -        0 3093244.195 -        0 3093697.429 -        0
+mtREV+F+R4      -1546833.039 3093758.078 -        0 3093758.109 -        0 3094211.343 -        0
+PMB+R4          -1548394.243 3096842.486 -        0 3096842.497 -        0 3097108.533 -        0
+Blosum62+R4     -1549690.396 3099434.792 -        0 3099434.803 -        0 3099700.839 -        0
+mtVer+F+R4      -1553194.022 3106480.044 -        0 3106480.075 -        0 3106933.309 -        0
+HIVb+R4         -1555219.632 3110493.264 -        0 3110493.275 -        0 3110759.311 -        0
+FLU+R4          -1555545.458 3111144.916 -        0 3111144.927 -        0 3111410.963 -        0
+LG+I            -1557956.776 3115957.552 -        0 3115957.559 -        0 3116174.331 -        0
+mtART+F+R4      -1560249.351 3120590.702 -        0 3120590.733 -        0 3121043.967 -        0
+mtMAM+F+R4      -1566533.609 3133159.218 -        0 3133159.249 -        0 3133612.483 -        0
+HIVw+F+R4       -1576022.702 3152137.404 -        0 3152137.435 -        0 3152590.669 -        0
+LG              -1594987.949 3190017.898 -        0 3190017.905 -        0 3190224.823 -        0
+mtZOA+R4        -1598506.301 3197066.602 -        0 3197066.613 -        0 3197332.649 -        0
+HIVw+R4         -1606711.336 3213476.672 -        0 3213476.683 -        0 3213742.719 -        0
+mtMet+R4        -1612153.475 3224360.950 -        0 3224360.961 -        0 3224626.997 -        0
+mtREV+R4        -1614255.800 3228565.600 -        0 3228565.611 -        0 3228831.647 -        0
+mtVer+R4        -1621775.112 3243604.224 -        0 3243604.235 -        0 3243870.271 -        0
+mtInv+R4        -1626151.931 3252357.862 -        0 3252357.873 -        0 3252623.909 -        0
+mtART+R4        -1630283.307 3260620.614 -        0 3260620.625 -        0 3260886.661 -        0
+mtMAM+R4        -1637381.850 3274817.700 -        0 3274817.711 -        0 3275083.747 -        0
+
+AIC, w-AIC   : Akaike information criterion scores and weights.
+AICc, w-AICc : Corrected AIC scores and weights.
+BIC, w-BIC   : Bayesian information criterion scores and weights.
+
+Plus signs denote the 95% confidence sets.
+Minus signs denote significant exclusion.
+
+SUBSTITUTION PROCESS
+--------------------
+
+Model of substitution: JTT+F+R4
+
+State frequencies: (empirical counts from alignment)
+
+  pi(A) = 0.0681
+  pi(R) = 0.0556
+  pi(N) = 0.0385
+  pi(D) = 0.0552
+  pi(C) = 0.0186
+  pi(Q) = 0.0450
+  pi(E) = 0.0754
+  pi(G) = 0.0556
+  pi(H) = 0.0250
+  pi(I) = 0.0493
+  pi(L) = 0.1046
+  pi(K) = 0.0691
+  pi(M) = 0.0243
+  pi(F) = 0.0396
+  pi(P) = 0.0491
+  pi(S) = 0.0712
+  pi(T) = 0.0501
+  pi(W) = 0.0117
+  pi(Y) = 0.0299
+  pi(V) = 0.0641
+
+Model of rate heterogeneity: FreeRate with 4 categories
+Site proportion and rates:  (0.3657,0.0785) (0.3643,0.5500) (0.1897,1.9744) (0.0803,4.9348)
+
+ Category  Relative_rate  Proportion
+  1         0.0785         0.3657
+  2         0.5500         0.3643
+  3         1.9744         0.1897
+  4         4.9348         0.0803
+
+MAXIMUM LIKELIHOOD TREE
+-----------------------
+
+Log-likelihood of the tree: -1523693.6130 (s.e. 2952.9680)
+Unconstrained log-likelihood (without tree): -1158823.0044
+Number of free parameters (#branches + #model parameters): 46
+Akaike information criterion (AIC) score: 3047479.2260
+Corrected Akaike information criterion (AICc) score: 3047479.2567
+Bayesian information criterion (BIC) score: 3047932.4911
+
+Total tree length (sum of branch lengths): 3.2524
+Sum of internal branch lengths: 0.4691 (14.4242% of tree length)
+
+NOTE: Tree is UNROOTED although outgroup taxon 'ciona.savignyi' is drawn at root
+Numbers in parentheses are  ultrafast bootstrap support (%)
+
++-----------------------------------------------------------ciona.savignyi
+|
+|  +--------gallus.gallus
++--| (100)
+|  +----xenopus.tropicalis
+|
+|  +-----anolis.carolinensis
++--| (100)
+   |  +---homo.sapiens
+   +--| (100)
+      |  +--pan.troglodytes
+      +--| (100)
+         |  +--pongo.abelii
+         +--| (100)
+            |  +--mus.musculus
+            +--| (100)
+               |  +--monodelphis.domestica
+               +--| (100)
+                  |  +--ornithorhynchus.anatinus
+                  +--| (100)
+                     |  +--danio.rerio
+                     +--| (100)
+                        +--gasterosteus.aculeatus
+
+Tree in newick format:
+
+(ciona.savignyi:1.6280640264,(gallus.gallus:0.2626175472,xenopus.tropicalis:0.1586472152)100:0.0732478824,(anolis.carolinensis:0.1825767207,(homo.sapiens:0.1298127525,(pan.troglodytes:0.0938134489,(pongo.abelii:0.0654401000,(mus.musculus:0.0358033275,(monodelphis.domestica:0.0381466356,(ornithorhynchus.anatinus:0.0297457211,(danio.rerio:0.0784305925,gasterosteus.aculeatus:0.0801281300)100:0.1029961835)100:0.0322228178)100:0.0386375668)100:0.0307556773)100:0.0444423345)100:0.0345896864)100:0.0642077839)100:0.0480272906);
+
+CONSENSUS TREE
+--------------
+
+Consensus tree is constructed from 1000 bootstrap trees
+Log-likelihood of consensus tree: -1523693.61312867
+Robinson-Foulds distance between ML tree and consensus tree: 0
+
+Branches with support >0.00000000% are kept (extended consensus)
+Branch lengths are optimized by maximum likelihood on original alignment
+Numbers in parentheses are bootstrap supports (%)
+
++-----------------------------------------------------------ciona.savignyi
+|
+|  +--------gallus.gallus
++--| (100)
+|  +----xenopus.tropicalis
+|
+|  +-----anolis.carolinensis
++--| (100)
+   |  +---homo.sapiens
+   +--| (100)
+      |  +--pan.troglodytes
+      +--| (100)
+         |  +--pongo.abelii
+         +--| (100)
+            |  +--mus.musculus
+            +--| (100)
+               |  +--monodelphis.domestica
+               +--| (100)
+                  |  +--ornithorhynchus.anatinus
+                  +--| (100)
+                     |  +--danio.rerio
+                     +--| (100)
+                        +--gasterosteus.aculeatus
+
+
+Consensus tree in newick format: 
+
+(ciona.savignyi:1.6279774104,(gallus.gallus:0.2626039923,xenopus.tropicalis:0.1586389123)100:0.0732726033,(anolis.carolinensis:0.1825620825,(homo.sapiens:0.1298007744,(pan.troglodytes:0.0938047820,(pongo.abelii:0.0654338274,(mus.musculus:0.0357999748,(monodelphis.domestica:0.0381428617,(ornithorhynchus.anatinus:0.0297431761,(danio.rerio:0.0784227412,gasterosteus.aculeatus:0.0801191602)100:0.1029844438)100:0.0322197893)100:0.0386341331)100:0.0307532776)100:0.0444400295)100:0.0345894419)100:0.0642089156)100:0.0479881007);
+
+TIME STAMP
+----------
+
+Date and time: Tue Feb 11 13:25:39 2025
+Total CPU time used: 3066.108324 seconds (0h:51m:6s)
+Total wall-clock time used: 801.794313 seconds (0h:13m:21s)
+

@@ -1,0 +1,24 @@
+
+project:
+  type: book
+
+book:
+  title: "Bioinformatics 2"
+  author: "Fabricio Almeida-Silva"
+  date: "2025"
+  chapters:
+    - index.qmd
+    - chapters/phylogenomics.qmd
+    
+bibliography: bibliography.bib
+
+execute:
+  freeze: auto
+  warning: false
+
+format:
+  html:
+    theme: cosmo
+
+editor: 
+  mode: source
