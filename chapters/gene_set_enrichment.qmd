@@ -1,0 +1,239 @@
+
+# Gene set enrichment analyses
+
+Gene set enrichment analyses are commonly used to identify overrepresented
+terms (mostly functional categories, but also sequence motifs and other
+sets) among a particular set of terms. For instance, researchers typically
+want to find if a list of differentially expressed genes (DEGs) is 
+overrepresented in genes related to a specific pathway. To do that, we
+use statistical methods to calculate the probability of finding the frequency
+of terms we found by chance (under the null hypothesis). Although simple,
+(correctly) performing enrichment analyses requires special attention to avoid
+common mistakes and pitfalls.
+
+## Goals of this lesson
+
+In this lesson, you will learn to:
+
+- perform enrichment analyses for functional terms among differentially
+expressed genes;
+- perform enrichment analyses for sequence motifs among a set of 
+promoter sequences.
+
+We will start by loading the required packages.
+
+```{r}
+#| message: false
+
+library(here)
+library(tidyverse)
+library(SummarizedExperiment)
+library(DESeq2)
+library(clusterProfiler)
+library(enrichplot)
+library(org.Mm.eg.db)
+library(universalmotif)
+
+set.seed(123) # for reproducibility
+```
+
+## Enrichment for functional terms
+
+To start, we will load an RNA-seq data set stored as a `SummarizedExperiment`
+object in `data/GSE96870_se.rds`. Data were obtained from 
+@blackmore2017influenza and modified to keep only a subset of the samples.
+In this experiment, researchers were trying to investigate how gene expression
+changes in male and female mice 4 and 8 days after infection with Influenza A.
+Samples were extracted from spinal cord and cerebellum tissues, but here we 
+will only cerebellum samples only. 
+
+Let's load the `SummarizedExperiment` object and take a look at it.
+
+```{r}
+# Load data
+se <- readRDS(here("data", "GSE96870_se.rds"))
+
+# Inspect data
+## Entire object
+se
+
+## Count matrix
+assay(se) |> head()
+
+## Sample metadata
+colData(se)
+```
+
+Now, we will identify genes that are differentially expressed on day 8 after
+infection compared to day 0 (control).
+
+```{r}
+#| warning: false
+
+# Keep only protein-coding genes
+se <- se[rowData(se)$gbkey == "mRNA"]
+
+# Get gene-wise differential expression test statistics (design: sex + time)
+dds <- DESeqDataSet(se, design = ~ sex + time)
+dds <- DESeq(dds)
+
+# Obtain results from the desired contrast: day 8 vs day 0
+res <- results(dds, contrast = c("time", "Day8", "Day0"))
+
+# Get differentially expressed genes (DEGs) in a character vector
+deg <- res |>
+    as.data.frame() |>
+    filter(padj <0.05, abs(log2FoldChange) > log2(1.5)) |>
+    tibble::rownames_to_column("gene") |>
+    pull(gene)
+
+head(deg)
+```
+
+Next, we will try find out if this set of DEGs is overrepresented in genes
+associated with a particular Gene Ontology (GO) term. For that, we will
+GO annotation in the `OrgDb` package for mouse. Bioconductor provides
+so-called `OrgDb` packages with annotation data for a bunch of model organisms,
+and many packages (including `r BiocStyle::Biocpkg("clusterProfiler")`,
+which we will use to perform overrepresentation analysis) can use OrgDb 
+packages to easily and automatically retrieve data.
+
+```{r}
+# Perform ORA for GO terms
+ora_go <- enrichGO(
+    gene = deg, 
+    keyType = "SYMBOL",
+    ont = "BP", 
+    OrgDb = org.Mm.eg.db
+)
+
+# Explore results as a data frame
+as.data.frame(ora_go) |> head()
+```
+
+::: {.callout-tip}
+
+### Overrepresentation analyses with non-model organisms
+
+If you're working with a non-model organism for which an `OrgDb` package
+is not available, you can create a 2-column data frame with functional
+annotation in the first column and gene IDs in the second column. Then,
+you can pass this annotation data frame to the `enricher()` function in
+`r BiocStyle::Biocpkg("clusterProfiler")`, which is more flexible and does
+not expect `OrgDb` objects as input.
+
+:::
+
+As you can see, the `enrichGO()` function returned GO terms that are
+significantly overrepresented in our set of DEGs. However, there is an
+important issue with the way we performed the enrichment analysis: `enrichGO()`
+used all genes in the mouse genome as background (or 'universe'). This does
+not make sense, because we didn't use all genes for our differential expression 
+analysis (e.g., we removed non-protein-coding genes). Choosing the right
+universe is **very important**, because a larger universe leads to
+more false positives (see an example [here](https://carpentries-incubator.github.io/bioc-rnaseq/07-gene-set-analysis.html#choose-a-proper-universe)).
+
+
+Now, let's perform the enrichment analysis again, but this time
+restricting our universe to only those genes in the expression matrix.
+
+```{r}
+# Perform ORA for GO terms with restricted universe
+ora_go2 <- enrichGO(
+    gene = deg, 
+    keyType = "SYMBOL",
+    ont = "BP", 
+    universe = rownames(se),
+    OrgDb = org.Mm.eg.db
+)
+
+# Explore results as a data frame
+as.data.frame(ora_go2) |> head()
+```
+
+Finally, you can also visually explore enrichment results as follows:
+
+```{r}
+#| fig-height: 8
+#| fig-width: 8
+
+# Barplot
+barplot(ora_go2, showCategory = 20)
+
+# Dotplot
+dotplot(ora_go2, showCategory = 20)
+```
+
+Although common, these visualization approaches are problematic 
+because (i) they only show the top N (often 20) terms, when most of the time
+there are hundreds of enriched terms, and (ii) the GO database contains a lot
+of redundant terms, so many of the bars or dots in these plots actually 
+represent the same thing. The best visualization technique for 
+overrepresentation analysis is **no visualization at all**. Manually looking
+at the table and summarizing results in text is a much better thing to do.
+
+## Enrichment for sequence motifs
+
+Enrichment analyses can also be used to find overrepresented sequence motifs
+among a set of sequences. For example, you may have a set of coexpressed
+genes and want to find out if a particular sequence motif is overrepresented
+in their promoter sequences (which would likely indicate transcription
+factor binding sites). There are many software tools for such kind of analysis,
+such as the MEME suite [@bailey2015meme] and the R/Bioconductor 
+package universalmotif [@tremblay2024universalmotif]. 
+
+
+Here, we will use
+`r BiocStyle::Biocpkg("universalmotif")` to find out if an example
+motif (stored in the example data set `ArabidopsisMotif`) is significantly
+overrepresented in promoters of 50 genes in the genome 
+of *Arabidopsis thaliana*. Let's first load the example data and take a quick
+look at them.
+
+```{r}
+# Load example data: promoters and motifs of Arabidopsis thaliana
+data("ArabidopsisMotif")
+data("ArabidopsisPromoters")
+
+# Inspect data
+ArabidopsisMotif
+ArabidopsisPromoters
+```
+
+Now, to perform an enrichment analysis, we will use the `enrich_motifs()`
+function.
+
+```{r}
+# Perform motif enrichment analysis
+enrich_motifs(
+    motifs = ArabidopsisMotif, 
+    sequences = ArabidopsisPromoters, 
+    shuffle.k = 3,
+    threshold = 0.001, 
+    RC = TRUE
+)
+```
+
+In principle, this analysis is very similar to what we've done for functional
+terms in the previous section: we are testing if input motifs are
+significantly overrepresented (or enriched) in a set of target sequences
+relative to a set of background sequences. Like in functional enrichment 
+analyses, it's important to carefully choose a suitable background 
+(or universe). For instance, if you want to find overrepresented motifs in
+a set of coexpressed genes, you might want to use as background only 
+promoters of expressed genes. When a background is not explicitly given,
+`enrich_motifs()` shuffles the input sequences to create a background.
+
+
+## Session information {.unnumbered}
+
+This document was created under the following conditions:
+
+```{r}
+#| echo: false
+
+sessioninfo::session_info()
+```
+
+## References {.unnumbered}
+

@@ -9,6 +9,7 @@ book:
   chapters:
     - index.qmd
     - chapters/phylogenomics.qmd
+    - chapters/gene_set_enrichment.qmd
     
 bibliography: bibliography.bib
 

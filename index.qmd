@@ -33,25 +33,28 @@ packages. To do that, open RStudio and execute the code below in your console:
 # Install BiocManager
 install.packages("BiocManager")
 
-# Use BiocManager to install required packages
-library(here)
-library(cogeqc)
-library(Biostrings)
-library(tidyverse)
-library(ape)
-library(msa)
-
+# Use {BiocManager} to install required packages (if they are not installed)
 packages <- c(
-    "treeio", 
-    "ape",
-    "ggtree", 
     "here", 
-    "Biostrings",
+    "cogeqc",
+    "Biostrings", 
+    "tidyverse", 
+    "ape",
     "msa", 
-    "tidyverse"
+    "tidyverse",
+    "SummarizedExperiment",
+    "DESeq2",
+    "clusterProfiler",
+    "enrichplot",
+    "org.Mm.eg.db",
+    "universalmotif"
 )
 
-BiocManager::install(packages)
+lapply(packages, function(x) {
+    if(!require("BiocManager", quietly = TRUE)) {
+        BiocManager::install(x, ask = FALSE, update = FALSE)
+    }
+})
 ```
 
 After that, you should have everything ready.
