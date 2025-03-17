@@ -50,11 +50,7 @@ packages <- c(
     "universalmotif"
 )
 
-lapply(packages, function(x) {
-    if(!require("BiocManager", quietly = TRUE)) {
-        BiocManager::install(x, ask = FALSE, update = FALSE)
-    }
-})
+BiocManager::install(packages)
 ```
 
 After that, you should have everything ready.
